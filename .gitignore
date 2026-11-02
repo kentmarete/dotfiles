@@ -1,0 +1,7 @@
+.DS_Store
+# machine-local files that must never be committed
+.gitconfig.local
+.vimrc.local
+.tmux.local.conf
+shell/.config/shell/local.sh
+.env

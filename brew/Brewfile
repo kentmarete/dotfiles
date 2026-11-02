@@ -1,0 +1,66 @@
+# Homebrew manifest. Install:  brew bundle --file=brew/Brewfile
+# Check what's missing:        brew bundle check --verbose --file=brew/Brewfile
+#
+# RULE: only list formulae Homebrew ships PREBUILT ("bottled") for this macOS.
+# On macOS 14 (Sonoma) many formulae have no bottles any more and compile
+# from source (starship → rust → llvm = hours). Those tools come from mise
+# instead (mise/.config/mise/config.toml), which downloads release binaries.
+# Check a formula before adding it:
+#   brew info --json=v2 <name> | jq '.formulae[0].bottle.stable.files | keys'
+# (empty list = no bottle for this macOS = put it in mise instead)
+#
+# Already provided elsewhere:
+#   git (2.39, Apple CLT) · curl (system) · Rust (rustup in ~/.cargo) · mise (~/.local/bin)
+
+tap "hashicorp/tap"
+
+# --- Shells & terminal (bottled) ----------------------------------------------
+brew "zsh"
+brew "bash"
+brew "bash-completion@2"
+brew "tmux"
+brew "stow"
+cask "ghostty"
+
+# --- Shell utilities (bottled) ------------------------------------------------
+brew "zoxide"
+brew "eza"
+brew "bat"
+brew "fd"
+brew "ripgrep"
+brew "jq"
+brew "tree"
+brew "tldr"
+brew "htop"
+brew "watch"
+brew "shellcheck"
+brew "shfmt"
+
+# --- Kubernetes / infra (bottled or prebuilt) -------------------------------
+brew "kubectx"
+brew "k9s"
+brew "hashicorp/tap/terraform"   # HashiCorp's tap ships a prebuilt binary
+
+# --- Editor --------------------------------------------------------------------
+# MacVim includes a terminal `vim` with +python3 (needed by vimspector) and
+# +clipboard. path.sh puts /Applications/MacVim.app/Contents/bin first.
+cask "macvim-app"
+
+# --- Containers --------------------------------------------------------------
+# Docker Desktop is already installed on this machine. On a fresh Mac:
+# cask "docker-desktop"
+
+# --- macOS apps ----------------------------------------------------------------
+cask "raycast"              # launcher, clipboard history, snippets
+cask "rectangle"            # keyboard window management
+cask "karabiner-elements"   # key remapping (rules in karabiner/)
+cask "stats"                # menu-bar system monitor
+
+# --- Fonts ---------------------------------------------------------------------
+cask "font-jetbrains-mono-nerd-font"
+
+# --- Optional (uncomment as needed) ------------------------------------------
+# cask "iterm2"
+# cask "android-studio"     # React Native Android
+# cask "dbeaver-community"  # GUI SQL client
+# cask "postgres-app"       # local Postgres server + psql

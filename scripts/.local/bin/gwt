@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# gwt — git worktree manager. Worktrees live next to the repo in
+#   <parent>/<repo>.worktrees/<branch>
+# so the main checkout is never disturbed.
+#
+#   gwt add <branch> [base]   create worktree (new branch from base, or existing branch)
+#   gwt ls                    list worktrees
+#   gwt path [query]          fzf-pick a worktree, print its path   (shell: gwcd)
+#   gwt tmux [query]          open picked worktree in a new tmux window
+#   gwt rm [query]            remove a worktree (fzf)
+#   gwt prune                 clean up stale worktree metadata
+set -euo pipefail
+
+die() { echo "gwt: $*" >&2; exit 1; }
+root=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || die "not in a git repo"
+root=$(dirname "$root")                       # main worktree, even when run from a linked one
+repo=$(basename "$root")
+base_dir="$(dirname "$root")/$repo.worktrees"
+
+pick() {
+  git -C "$root" worktree list | fzf --prompt='worktree> ' ${1:+--query "$1"} --select-1 \
+    --preview 'git -C {1} log --oneline --graph --color=always -15' | awk '{print $1}'
+}
+
+cmd="${1:-ls}"; shift || true
+case "$cmd" in
+  add)
+    branch="${1:?usage: gwt add <branch> [base]}"; base="${2:-}"
+    dest="$base_dir/${branch//\//-}"
+    mkdir -p "$base_dir"
+    git -C "$root" fetch --quiet origin 2>/dev/null || true
+    if git -C "$root" show-ref --verify --quiet "refs/heads/$branch"; then
+      git -C "$root" worktree add "$dest" "$branch"
+    elif git -C "$root" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+      git -C "$root" worktree add --track -b "$branch" "$dest" "origin/$branch"
+    else
+      git -C "$root" worktree add -b "$branch" "$dest" ${base:+"$base"}
+    fi
+    echo "$dest"
+    ;;
+  ls|list) git -C "$root" worktree list ;;
+  path)    pick "${1:-}" ;;
+  tmux)
+    p=$(pick "${1:-}"); [[ -n $p ]] || exit 0
+    [[ -n ${TMUX:-} ]] || die "not inside tmux"
+    tmux new-window -c "$p" -n "$(basename "$p")"
+    ;;
+  rm|remove)
+    p=$(pick "${1:-}"); [[ -n $p ]] || exit 0
+    [[ $p == "$root" ]] && die "refusing to remove the main worktree"
+    git -C "$root" worktree remove "$p" && echo "removed $p"
+    ;;
+  prune) git -C "$root" worktree prune -v ;;
+  *) sed -n '2,12p' "$0"; exit 1 ;;
+esac

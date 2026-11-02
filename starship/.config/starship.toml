@@ -1,0 +1,43 @@
+# Starship prompt — https://starship.rs/config/
+"$schema" = 'https://starship.rs/config-schema.json'
+add_newline = true
+command_timeout = 800
+
+format = """
+$directory$git_branch$git_state$git_status\
+$rust$java$nodejs$python$docker_context$kubernetes$aws\
+$cmd_duration$jobs
+$character"""
+
+[directory]
+truncation_length = 4
+truncate_to_repo = true
+style = "bold cyan"
+
+[git_branch]
+style = "bold purple"
+
+[git_status]
+format = '([\[$all_status$ahead_behind\]]($style) )'
+style = "bold yellow"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+
+[cmd_duration]
+min_time = 2000
+format = "took [$duration]($style) "
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[kubernetes]
+disabled = false      # shows context/namespace only inside k8s-related dirs
+detect_files = ["Chart.yaml", "kustomization.yaml", "skaffold.yaml"]
+detect_folders = ["k8s"]
+format = '[⎈ $context( \($namespace\))]($style) '
+
+[aws]
+format = '[$symbol($profile )(\($region\) )]($style)'

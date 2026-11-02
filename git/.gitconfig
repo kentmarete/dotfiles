@@ -1,0 +1,105 @@
+# ~/.gitconfig — shared settings. Identity (name/email/signing key) lives in
+# ~/.gitconfig.local, which install.sh creates and which is NOT version-controlled.
+
+[core]
+    editor = vim
+    pager = delta
+    autocrlf = input
+    # global ignore file: ~/.config/git/ignore (git's XDG default)
+
+[init]
+    defaultBranch = main
+
+[pull]
+    rebase = true
+
+[push]
+    autoSetupRemote = true
+    followTags = true
+
+[fetch]
+    prune = true
+    pruneTags = true
+
+[rebase]
+    autoStash = true
+    autoSquash = true
+    updateRefs = true
+
+[merge]
+    conflictstyle = zdiff3
+
+[diff]
+    algorithm = histogram
+    colorMoved = default
+    mnemonicPrefix = true
+
+[rerere]
+    enabled = true          # remember conflict resolutions
+
+[branch]
+    sort = -committerdate
+
+[tag]
+    sort = version:refname
+
+[column]
+    ui = auto
+
+[help]
+    autocorrect = prompt
+
+[commit]
+    verbose = true
+
+[credential]
+    helper = osxkeychain    # tokens live in macOS Keychain, never in this repo
+
+# GitHub over HTTPS: use the token from `gh auth login` (also kept in Keychain).
+# The empty helper line clears osxkeychain for these hosts so gh is the only source.
+[credential "https://github.com"]
+    helper =
+    helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+    helper =
+    helper = !gh auth git-credential
+
+# --- delta (pager) -------------------------------------------------------------
+[interactive]
+    diffFilter = delta --color-only   # pretty `git add -p`
+
+[delta]
+    navigate = true         # n / N jump between files
+    line-numbers = true
+    side-by-side = true
+    syntax-theme = gruvbox-dark
+
+# --- aliases ------------------------------------------------------------------
+[alias]
+    st = status -sb
+    co = checkout
+    sw = switch
+    swc = switch -c
+    br = branch
+    branches = branch --sort=-committerdate --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(contents:subject) %(color:green)(%(committerdate:relative))%(color:reset)'
+    lg = log --oneline --graph --decorate --all
+    last = log -1 HEAD --stat
+    unstage = restore --staged
+    amend = commit --amend --no-edit
+    ap = add -p
+    fixup = commit --fixup
+    wip = !git add -A && git commit -m 'WIP' --no-verify
+    undo = reset --soft HEAD~1
+    pf = push --force-with-lease
+    wt = worktree
+    gone = !git fetch -p && git for-each-ref --format '%(refname:short) %(upstream:track)' refs/heads | awk '$2 == \"[gone]\" {print $1}'
+    cleanup = !git gone | xargs -r git branch -D
+    aliases = !git config --get-regexp ^alias\\. | sed 's/^alias\\.//'
+
+[include]
+    path = ~/.gitconfig.local
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

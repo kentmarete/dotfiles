@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# cproj — fuzzy-pick a project (git repo under $PROJECT_DIRS) and open/attach
+# its tmux session with a standard layout:
+#   1:editor (vim)  2:shell  3:git (lazygit)
+# Usage: cproj            pick with fzf
+#        cproj <path>     open that directory directly
+# Inside tmux: prefix P
+set -euo pipefail
+
+pick() {
+  local dirs=() d
+  IFS=: read -r -a cand <<<"${PROJECT_DIRS:-$HOME/code:$HOME/projects}"
+  for d in "${cand[@]}"; do [[ -d $d ]] && dirs+=("$d"); done
+  [[ ${#dirs[@]} -eq 0 ]] && { echo "No project dirs exist. Set PROJECT_DIRS in ~/.config/shell/local.sh" >&2; exit 1; }
+  {
+    if command -v fd >/dev/null; then
+      fd --hidden --no-ignore --type d --max-depth 4 '^\.git$' "${dirs[@]}" -x dirname {} 2>/dev/null
+    else
+      find "${dirs[@]}" -maxdepth 4 -type d -name .git -prune -exec dirname {} \; 2>/dev/null
+    fi
+    printf '%s\n' "${dirs[@]}"
+  } | sed 's:/$::' | sort -u |
+    fzf --prompt='project> ' --preview 'eza -1 --icons --git --color=always {} 2>/dev/null || ls {}; echo; git -C {} log --oneline -8 2>/dev/null'
+}
+
+dir="${1:-}"
+[[ -z $dir ]] && dir=$(pick)
+[[ -z $dir ]] && exit 0
+dir=$(cd "$dir" && pwd)
+name=$(basename "$dir" | tr '.:' '__')
+
+if ! tmux has-session -t "=$name" 2>/dev/null; then
+  tmux new-session -d -s "$name" -c "$dir" -n editor
+  tmux send-keys -t "$name:editor" "vim ." C-m
+  tmux new-window -t "$name" -c "$dir" -n shell
+  command -v lazygit >/dev/null && git -C "$dir" rev-parse 2>/dev/null &&
+    tmux new-window -t "$name" -c "$dir" -n git lazygit
+  tmux select-window -t "$name:editor"
+fi
+
+if [[ -n ${TMUX:-} ]]; then
+  tmux switch-client -t "$name"
+else
+  tmux attach-session -t "$name"
+fi

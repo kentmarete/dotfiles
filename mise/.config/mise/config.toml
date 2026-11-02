@@ -1,0 +1,53 @@
+# Global tools & runtimes — https://mise.jdx.dev
+# mise downloads PREBUILT binaries (no compiling), so it also covers the CLI
+# tools Homebrew would have to build from source on this macOS version.
+#
+# Projects override these with their own mise.toml / .tool-versions / .nvmrc /
+# .java-version / .python-version — cd into a project and the right
+# JDK/Node/Python is activated, JAVA_HOME included.
+#
+#   mise use java@temurin-17      # pin a version in the current project
+#   mise ls / mise outdated / mise upgrade
+#   mise registry | grep <name>   # find a tool
+
+[tools]
+# --- Language runtimes ---------------------------------------------------------
+# Java: 21 is the default on PATH, 25 also installed (switch per project)
+java   = ["temurin-21", "temurin-25"]
+maven  = "latest"
+gradle = "latest"
+
+node   = "lts"
+pnpm   = "latest"
+"npm:typescript"   = "latest"
+"npm:@angular/cli" = "latest"
+"npm:eslint"       = "latest"
+"npm:prettier"     = "latest"
+
+python = "3.13"          # prebuilt (python-build-standalone)
+uv     = "latest"
+ruff   = "latest"
+
+# --- Shell & terminal tools ---------------------------------------------------
+starship = "latest"
+sheldon  = "latest"
+fzf      = "latest"
+atuin    = "latest"
+yq       = "latest"
+
+# --- Git ---------------------------------------------------------------------------
+delta    = "latest"      # git pager
+lazygit  = "latest"
+gh       = "latest"
+git-lfs  = "latest"
+
+# --- Editors ---------------------------------------------------------------------
+neovim   = "latest"      # installed but not configured (kept separate from vim)
+
+# --- Kubernetes / cloud -----------------------------------------------------------
+kubectl  = "latest"
+helm     = "latest"
+
+[settings]
+# Honour .nvmrc / .java-version / .python-version files from other tools
+idiomatic_version_file_enable_tools = ["node", "java", "python"]

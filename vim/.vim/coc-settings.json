@@ -1,0 +1,42 @@
+{
+  "suggest.noselect": true,
+  "suggest.enablePreselect": false,
+  "inlayHint.enable": true,
+  "codeLens.enable": true,
+  "coc.preferences.formatOnSave": true,
+  "diagnostic.errorSign": "✘",
+  "diagnostic.warningSign": "▲",
+  "diagnostic.infoSign": "●",
+  "diagnostic.hintSign": "➤",
+  "diagnostic.virtualText": true,
+  "diagnostic.virtualTextCurrentLineOnly": true,
+
+  "tsserver.formatOnType": false,
+  "typescript.preferences.importModuleSpecifier": "shortest",
+  "eslint.autoFixOnSave": true,
+  "eslint.probe": ["javascript", "javascriptreact", "typescript", "typescriptreact", "html"],
+  "prettier.onlyUseLocalVersion": false,
+  "prettier.disableSuccessMessage": true,
+
+  "java.import.gradle.enabled": true,
+  "java.import.maven.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.format.enabled": true,
+  "java.saveActions.organizeImports": true,
+  "java.inlayHints.parameterNames.enabled": "literals",
+
+  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.cargo.features": "all",
+  "rust-analyzer.inlayHints.typeHints.enable": true,
+
+  "pyright.inlayHints.functionReturnTypes": true,
+  "pyright.inlayHints.variableTypes": false,
+  "ruff.enable": true,
+  "ruff.autoFixOnSave": true,
+
+  "explorer.icon.enableNerdfont": true,
+  "explorer.file.showHiddenFiles": true,
+  "explorer.width": 35,
+
+  "snippets.ultisnips.enable": false
+}

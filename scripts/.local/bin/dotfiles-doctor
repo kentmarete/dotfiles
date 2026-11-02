@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# dotfiles-doctor — validate the workstation and print a report.
+# Exit code = number of failed checks.
+DOTFILES="${DOTFILES:-$HOME/dotfiles}"
+fail=0 warn=0
+ok()   { printf '  \033[32m✔\033[0m %s\n' "$*"; }
+bad()  { printf '  \033[31m✘\033[0m %s\n' "$*"; fail=$((fail+1)); }
+meh()  { printf '  \033[33m!\033[0m %s\n' "$*"; warn=$((warn+1)); }
+hdr()  { printf '\n\033[1m%s\033[0m\n' "$*"; }
+
+hdr "System"
+ok "macOS $(sw_vers -productVersion) on $(uname -m)"
+xcode-select -p >/dev/null 2>&1 && ok "Xcode Command Line Tools" || bad "Xcode CLT missing (xcode-select --install)"
+command -v brew >/dev/null && ok "Homebrew $(brew --version | head -1 | awk '{print $2}') at $(brew --prefix)" || bad "Homebrew missing"
+
+hdr "Core tools"
+for t in zsh bash tmux vim git stow mise starship sheldon fzf rg fd bat eza zoxide atuin delta lazygit gh jq; do
+  command -v "$t" >/dev/null && ok "$t" || bad "$t not found"
+done
+
+hdr "Toolchains"
+for t in node npm pnpm tsc ng java mvn gradle python3 uv ruff cargo rustc rust-analyzer docker kubectl helm terraform; do
+  command -v "$t" >/dev/null && ok "$t → $(command -v "$t")" || meh "$t not found"
+done
+[[ -n ${JAVA_HOME:-} ]] && ok "JAVA_HOME=$JAVA_HOME" || meh "JAVA_HOME not set (mise sets it in interactive shells)"
+
+hdr "Symlinks"
+for f in .zshrc .zprofile .bashrc .bash_profile .vimrc .tmux.conf .gitconfig \
+         .config/shell/path.sh .config/sheldon/plugins.toml .config/starship.toml \
+         .config/mise/config.toml .vim/coc-settings.json; do
+  t="$HOME/$f"
+  if [[ -L $t && $(readlink "$t") == *dotfiles* ]]; then ok "~/$f"
+  elif [[ -e $t ]]; then meh "~/$f exists but is not linked to dotfiles"
+  else bad "~/$f missing"; fi
+done
+[[ -f $HOME/.gitconfig.local ]] && ok "~/.gitconfig.local (identity: $(git config user.name) <$(git config user.email)>)" \
+  || meh "~/.gitconfig.local missing — set git user.name/user.email"
+
+hdr "Config syntax"
+zsh -n "$HOME/.zshrc" 2>/dev/null && ok "zshrc parses" || bad "zshrc syntax error"
+bash -n "$HOME/.bashrc" 2>/dev/null && ok "bashrc parses" || bad "bashrc syntax error"
+for f in "$HOME"/.config/shell/*.sh; do [[ -e $f ]] || continue; bash -n "$f" 2>/dev/null || bad "syntax: $f"; done
+git config --list >/dev/null 2>&1 && ok "gitconfig parses" || bad "gitconfig error"
+if command -v tmux >/dev/null; then
+  out=$(tmux -L doctor -f "$HOME/.tmux.conf" start-server \; show -g prefix \; kill-server 2>&1)
+  [[ $out == *C-a* ]] && ok "tmux.conf loads" || bad "tmux.conf: $out"
+fi
+if command -v vim >/dev/null; then
+  # -es exits non-zero if any error occurred while sourcing the vimrc
+  if vim -Nu "$HOME/.vimrc" -i NONE -es -c 'qa!' </dev/null >/dev/null 2>&1; then ok "vimrc loads"
+  else bad "vimrc reported errors (open vim and run :messages)"; fi
+  if [[ $(vim -Nu NONE -es -c 'call writefile([has("python3")], "/dev/stdout")' -c 'qa!' </dev/null 2>/dev/null | tr -dc 01) == 1 ]]; then
+    ok "vim +python3 ($(command -v vim)) — vimspector debugging available"
+  else
+    meh "vim has no python3 ($(command -v vim)) — install MacVim (brew bundle) for vimspector"
+  fi
+fi
+
+hdr "Plugins"
+[[ -d $HOME/.vim/plugged/coc.nvim ]] && ok "vim plugins installed" || meh "vim plugins not installed (vim +PlugInstall)"
+[[ -d $HOME/.tmux/plugins/tpm ]] && ok "tmux TPM installed" || meh "TPM missing"
+[[ -d ${XDG_DATA_HOME:-$HOME/.local/share}/sheldon/repos ]] && ok "sheldon plugins downloaded" || meh "sheldon plugins not locked (sheldon lock)"
+
+hdr "Shell startup"
+if command -v zsh >/dev/null; then
+  s=$(/usr/bin/time -p zsh -i -c exit 2>&1 >/dev/null </dev/null | awk '/^real/{print $2}')
+  ok "zsh interactive startup: ${s}s"
+fi
+
+printf '\n\033[1mResult:\033[0m %d failed, %d warnings\n' "$fail" "$warn"
+exit "$fail"

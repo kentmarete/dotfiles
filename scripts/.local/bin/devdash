@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# devdash — open a "dashboard" tmux window for the current project:
+#   ┌──────────────────────┬──────────────────┐
+#   │ btop (CPU/mem/procs) │ git status (live)│
+#   │                      ├──────────────────┤
+#   │                      │ docker ps (live) │
+#   └──────────────────────┴──────────────────┘
+# Inside tmux: prefix D
+set -euo pipefail
+[[ -n ${TMUX:-} ]] || { echo "devdash: run inside tmux" >&2; exit 1; }
+
+dir=$(tmux display -p '#{pane_current_path}')
+mon=$(command -v btop || command -v htop || echo top)
+
+tmux new-window -n dash -c "$dir" "$mon"
+tmux split-window -h -p 40 -c "$dir" \
+  "watch -c -n 3 'git -c color.status=always status -sb 2>/dev/null; echo; git log --oneline -5 2>/dev/null'"
+tmux split-window -v -c "$dir" \
+  "watch -n 5 \"docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null || echo 'docker not running'\""
+tmux select-pane -t 0

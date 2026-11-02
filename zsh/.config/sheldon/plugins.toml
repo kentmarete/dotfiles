@@ -1,0 +1,44 @@
+# Sheldon plugin manifest — https://sheldon.cli.rs
+# Plugins load top-to-bottom. The order matters:
+#   1. zsh-completions only adds to fpath, so it must come before compinit
+#   2. compinit
+#   3. fzf-tab must load after compinit and before widget-wrapping plugins
+#   4. zsh-autosuggestions
+#   5. zsh-syntax-highlighting, after the other widget plugins
+#   6. zsh-history-substring-search; its README says to load it after syntax-highlighting
+# Run `sheldon lock --update` to update plugins.
+
+shell = "zsh"
+
+[plugins.zsh-completions]
+github = "zsh-users/zsh-completions"
+dir = "src"
+apply = ["fpath"]
+
+[plugins.compinit]
+inline = '''
+() {
+  setopt local_options extended_glob
+  autoload -Uz compinit
+  local zcd="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-$ZSH_VERSION"
+  mkdir -p "${zcd:h}"
+  # Full security check at most once a day; otherwise trust the cached dump.
+  if [[ ! -s $zcd || -n $zcd(#qN.mh+24) ]]; then
+    compinit -d "$zcd"
+  else
+    compinit -C -d "$zcd"
+  fi
+}
+'''
+
+[plugins.fzf-tab]
+github = "Aloxaf/fzf-tab"
+
+[plugins.zsh-autosuggestions]
+github = "zsh-users/zsh-autosuggestions"
+
+[plugins.zsh-syntax-highlighting]
+github = "zsh-users/zsh-syntax-highlighting"
+
+[plugins.zsh-history-substring-search]
+github = "zsh-users/zsh-history-substring-search"

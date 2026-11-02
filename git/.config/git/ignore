@@ -1,0 +1,33 @@
+# Global gitignore (git reads ~/.config/git/ignore by default)
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Editors / IDEs
+*.swp
+*.swo
+*~
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.vimspector.json.local
+Session.vim
+
+# Environments & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Tool caches
+.mise.local.toml
+.direnv/

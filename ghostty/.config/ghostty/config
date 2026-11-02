@@ -1,0 +1,19 @@
+# Ghostty — https://ghostty.org/docs/config  (list themes: ghostty +list-themes)
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+theme = dark:Catppuccin Mocha,light:Catppuccin Latte
+window-padding-x = 8
+window-padding-y = 6
+window-save-state = always
+cursor-style = block
+mouse-hide-while-typing = true
+copy-on-select = clipboard
+confirm-close-surface = false
+shell-integration-features = no-cursor,sudo,title
+
+# Option acts as Alt — needed for fzf Alt-C, tmux M-Left/M-Right, readline Alt-b/f
+macos-option-as-alt = true
+macos-titlebar-style = tabs
+
+# Quick terminal (drop-down) on Ctrl-` from anywhere
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
